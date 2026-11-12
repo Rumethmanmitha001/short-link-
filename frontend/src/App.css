@@ -72,7 +72,8 @@ button:hover {
   overflow-wrap: anywhere;
 }
 
-.short-link span {
+.short-link a {
   color: #2563eb;
   font-size: 14px;
+  overflow-wrap: anywhere;
 }

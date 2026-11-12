@@ -5,26 +5,37 @@ import "./App.css";
 function App() {
   const [longUrl, setLongUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleShorten = () => {
-    if (!longUrl.trim()) {
-      alert("Please enter a URL!");
-      return;
-    }
+  const handleShorten = async (event) => {
+    event.preventDefault();
+    setError("");
+    setShortUrl("");
+    setIsLoading(true);
 
     try {
-      const parsedUrl = new URL(longUrl);
+      const response = await fetch("http://localhost:3000/api/shorten", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          longUrl: longUrl.trim()
+        })
+      });
 
-      if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-        alert("Please enter a valid HTTP or HTTPS URL!");
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to shorten this URL.");
       }
 
-      const randomCode = Math.random().toString(36).substring(2, 8);
-
-      setShortUrl(`http://localhost:3000/${randomCode}`);
-    } catch {
-      alert("Please enter a valid URL!");
+      setShortUrl(data.shortUrl);
+    } catch (requestError) {
+      setError(requestError.message || "Unable to connect to the URL service.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -33,7 +44,7 @@ function App() {
       await navigator.clipboard.writeText(shortUrl);
       alert("Short URL copied!");
     } catch {
-      alert("Unable to copy. Please copy the URL manually.");
+      setError("Unable to copy automatically. Please copy the URL manually.");
     }
   };
 
@@ -46,25 +57,34 @@ function App() {
           Convert your long URLs into short links easily.
         </p>
 
-        <input
-          type="url"
-          placeholder="Enter your long URL here..."
-          value={longUrl}
-          onChange={(e) => setLongUrl(e.target.value)}
-        />
+        <form onSubmit={handleShorten}>
+          <input
+            type="url"
+            placeholder="Enter your long URL here..."
+            value={longUrl}
+            onChange={(e) => {
+              setLongUrl(e.target.value);
+              setError("");
+              setShortUrl("");
+            }}
+            required
+          />
 
-        <button onClick={handleShorten}>
-          Shorten URL
-        </button>
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? "Shortening..." : "Shorten URL"}
+          </button>
+        </form>
+
+        {error && <p role="alert">{error}</p>}
 
         {shortUrl && (
           <div className="result">
             <p>Your shortened URL:</p>
 
             <div className="short-link">
-              <span>{shortUrl}</span>
+              <a href={shortUrl}>{shortUrl}</a>
 
-              <button onClick={handleCopy}>
+              <button type="button" onClick={handleCopy}>
                 Copy
               </button>
             </div>
