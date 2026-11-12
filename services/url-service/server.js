@@ -59,7 +59,24 @@ app.post("/api/shorten", (req, res) => {
     res.status(201).json({
         longUrl: longUrl,
         shortCode: shortCode,
-        shortUrl: `${req.protocol}://${req.get("host")}/${shortCode}`
+        shortUrl: `http://localhost:3001/${shortCode}`
+    });
+});
+
+// Get original URL using short code
+app.get("/api/urls/:shortCode", (req, res) => {
+    const { shortCode } = req.params;
+    const originalUrl = urls.get(shortCode);
+
+    if (!originalUrl) {
+        return res.status(404).json({
+            error: "Short URL not found"
+        });
+    }
+
+    return res.json({
+        shortCode: shortCode,
+        longUrl: originalUrl
     });
 });
 
