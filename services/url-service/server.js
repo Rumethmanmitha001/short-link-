@@ -5,6 +5,7 @@ const crypto = require("crypto");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const SHORT_URL_BASE = process.env.SHORT_URL_BASE || "http://localhost:3001";
 
 app.use(cors());
 app.use(express.json());
@@ -59,7 +60,7 @@ app.post("/api/shorten", (req, res) => {
     res.status(201).json({
         longUrl: longUrl,
         shortCode: shortCode,
-        shortUrl: `http://localhost:3001/${shortCode}`
+        shortUrl: `${SHORT_URL_BASE.replace(/\/$/, "")}/${shortCode}`
     });
 });
 
